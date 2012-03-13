@@ -1,26 +1,26 @@
 name: SimpleSort
-version: 1.0
+version: 1.1
 description: A simple inventory/chest sorting plugin.
 author: FlyingLawnmowerDev
+authors: [Shadow1013GL, Pyr0Byt3, pendo324]
 main: me.flyinglawnmower.simplesort.SimpleSort
-depend: [WorldEdit]
 commands:
   sort:
     aliases: [simplesort, ss]
     description: Sorts player inventory.
     usage: |
-           /<command> [top] - sorts top part of your inventory.
-           /<command> all - sorts all of your inventory.
-           /<command> hot - sorts your hotbar.
+           /<command> [top] - Sorts top part of your inventory.
+           /<command> all - Sorts all of your inventory.
+           /<command> hot - Sorts your hotbar.
     permission: simplesort.inventory
 permissions:
   simplesort.*:
-    description: Allows the player to sort everything.
+    description: Allows the player to sort both chests and their own inventory.
     default: true
     children:
       simplesort.chest: true
       simplesort.inventory: true
   simplesort.chest:
-    description: Allows the player to sort chests.
+    description: Allows the player to sort chests by hitting them with the wand.
   simplesort.inventory:
-    description: Allows the player to sort their inventory.
+    description: Allows the player to sort their own inventory.
