@@ -18,38 +18,37 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.sk89q.worldedit.blocks.ItemType;
-
 class ItemComparator implements Comparator<ItemStack> {
 	public int compare(ItemStack item1, ItemStack item2) {
 		if (item1 == null && item2 != null) {
+			return 1;
+		} else if (item1 != null && item2 == null) {
 			return -1;
 		} else if (item1 == null && item2 == null) {
 			return 0;
-		} else if (item1 != null && item2 == null) {
-			return 1;
 		} else if (item1.getTypeId() > item2.getTypeId()) {
 			return 1;
 		} else if (item1.getTypeId() < item2.getTypeId()) {
 			return -1;
 		} else if (item1.getTypeId() == item2.getTypeId()) {
-			if (ItemType.usesDamageValue(item1.getTypeId())) {
-				if (item1.getDurability() < item2.getDurability()) {
-					return 1;
-				} else if (item1.getDurability() > item2.getDurability()) {
-					return -1;
-				}
-			}
-			if (item1.getAmount() < item2.getAmount()) {
-				return -1;
-			} else if (item1.getAmount() > item2.getAmount()) {
+			if (item1.getDurability() > item2.getDurability()) {
 				return 1;
+			} else if (item1.getDurability() < item2.getDurability()) {
+				return -1;
+			} else if (item1.getDurability() == item2.getDurability()) {
+				return 0;
+			}
+			if (item1.getAmount() > item2.getAmount()) {
+				return 1;
+			} else if (item1.getAmount() < item2.getAmount()) {
+				return -1;
 			}
 		}
 		return 0;
@@ -58,27 +57,27 @@ class ItemComparator implements Comparator<ItemStack> {
 
 public class SimpleSort extends JavaPlugin implements Listener {
 	private ItemStack[] stackItems(ItemStack[] items, int first, int last) {
-		for (int i = 0; i < items.length; i++) {
-			ItemStack item = items[i];
-			if (item == null || item.getAmount() <= 0 || item.getMaxStackSize() == 1) {
+		for (int i = first; i < last; i++) {
+			ItemStack item1 = items[i];
+			if (item1 == null || item1.getAmount() <= 0 || item1.getMaxStackSize() == 1) {
 				continue;
 			}
-			if (item.getAmount() < item.getMaxStackSize()) {
-				int needed = item.getMaxStackSize() - item.getAmount();
-				for (int j = i + 1; j < items.length; j++) {
+			if (item1.getAmount() < item1.getMaxStackSize()) {
+				int needed = item1.getMaxStackSize() - item1.getAmount();
+				for (int j = i + 1; j < last; j++) {
 					ItemStack item2 = items[j];
-					if (item2 == null || item2.getAmount() <= 0 || item.getMaxStackSize() == 1) {
+					if (item2 == null || item2.getAmount() <= 0 || item1.getMaxStackSize() == 1) {
 						continue;
 					}
-					if (item2.getTypeId() == item.getTypeId() && (!ItemType.usesDamageValue(item.getTypeId()) || item.getDurability() == item2.getDurability()) && item.getEnchantments().equals(item2.getEnchantments())) {
+					if (item2.getTypeId() == item1.getTypeId() && item1.getDurability() == item2.getDurability() && item1.getEnchantments().equals(item2.getEnchantments())) {
 						if (item2.getAmount() > needed) {
-							item.setAmount(64);
+							item1.setAmount(64);
 							item2.setAmount(item2.getAmount() - needed);
 							break;
 						} else {
 							items[j] = null;
-							item.setAmount(item.getAmount() + item2.getAmount());
-							needed = 64 - item.getAmount();
+							item1.setAmount(item1.getAmount() + item2.getAmount());
+							needed = 64 - item1.getAmount();
 						}
 					}
 				}
@@ -94,6 +93,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 	}
 	
 	public void onEnable() {
+		this.getConfig().options().header("The item ID of the chest-sorting wand.");
 		this.getConfig().options().copyDefaults(true);
 		saveConfig();
 		getServer().getPluginManager().registerEvents(this, this);
@@ -106,7 +106,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 			
 			if (cmd.getName().equalsIgnoreCase("sort")) {
 				if (args.length == 0 || args[0].equalsIgnoreCase("top")) {
-					items = sortItems(items, 10, 36);
+					items = sortItems(items, 9, 36);
 					player.sendMessage(ChatColor.GREEN + "Inventory top sorted!");
 				} else if (args[0].equalsIgnoreCase("all")) {
 					items = sortItems(items, 0, 36);
@@ -127,12 +127,12 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		return false;
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getPlayer().hasPermission("simplesort.chest")) {
 			Block block = event.getClickedBlock();
 			
-			if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getMaterial().getId() == Integer.parseInt(getConfig().getString("wand")) && block.getType() == Material.CHEST) {
+			if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getMaterial().getId() == getConfig().getInt("wand") && block.getType() == Material.CHEST) {
 				Chest chest = (Chest)block.getState();
 				ItemStack[] chestItems = chest.getInventory().getContents();
 				chestItems = sortItems(chestItems, 0, chestItems.length);
