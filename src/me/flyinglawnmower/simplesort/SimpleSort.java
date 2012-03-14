@@ -107,13 +107,13 @@ public class SimpleSort extends JavaPlugin implements Listener {
 			if (cmd.getName().equalsIgnoreCase("sort")) {
 				if (args.length == 0 || args[0].equalsIgnoreCase("top")) {
 					items = sortItems(items, 9, 36);
-					player.sendMessage(ChatColor.GREEN + "Inventory top sorted!");
+					player.sendMessage(ChatColor.DARK_GREEN + "Inventory top sorted!");
 				} else if (args[0].equalsIgnoreCase("all")) {
 					items = sortItems(items, 0, 36);
-					player.sendMessage(ChatColor.GREEN + "Entire inventory sorted!");
+					player.sendMessage(ChatColor.DARK_GREEN + "Entire inventory sorted!");
 				} else if (args[0].equalsIgnoreCase("hot")) {
 					items = sortItems(items, 0, 9);
-					player.sendMessage(ChatColor.GREEN + "Hotbar sorted!");
+					player.sendMessage(ChatColor.DARK_GREEN + "Hotbar sorted!");
 				} else {
 					return false;
 				}
@@ -137,7 +137,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 				ItemStack[] chestItems = chest.getInventory().getContents();
 				chestItems = sortItems(chestItems, 0, chestItems.length);
 				chest.getInventory().setContents(chestItems);
-				event.getPlayer().sendMessage(ChatColor.GREEN + "Chest sorted!");
+				event.getPlayer().sendMessage(ChatColor.DARK_GREEN + "Chest sorted!");
 			}
 		}
 	}
