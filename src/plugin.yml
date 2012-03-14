@@ -16,7 +16,7 @@ commands:
 permissions:
   simplesort.*:
     description: Allows the player to sort both chests and their own inventory.
-    default: true
+    default: op
     children:
       simplesort.chest: true
       simplesort.inventory: true
