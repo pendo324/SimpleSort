@@ -2,7 +2,7 @@ package me.flyinglawnmower.simplesort;
 
 /*
  * SimpleSort plugin by:
- * 	- Shadow1013GL
+ *  - Shadow1013GL
  *  - Pyr0Byt3
  *  - pendo324
  */
@@ -86,10 +86,10 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		return items;
 	}
 	
-	private ItemStack[] sortItems(ItemStack[] list, int first, int last) {
-		list = stackItems(list, first, last);
-		Arrays.sort(list, first, last, new ItemComparator());
-		return list;
+	private ItemStack[] sortItems(ItemStack[] items, int first, int last) {
+		items = stackItems(items, first, last);
+		Arrays.sort(items, first, last, new ItemComparator());
+		return items;
 	}
 	
 	public void onEnable() {
