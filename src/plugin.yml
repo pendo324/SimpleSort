@@ -1,5 +1,5 @@
 name: SimpleSort
-version: 1.1
+version: 1.2
 description: A simple inventory/chest sorting plugin.
 author: FlyingLawnmowerDev
 authors: [Shadow1013GL, Pyr0Byt3, pendo324]
@@ -9,9 +9,9 @@ commands:
     aliases: [simplesort, ss]
     description: Sorts player inventory.
     usage: |
-           /<command> [top] - Sorts top part of your inventory.
-           /<command> all - Sorts all of your inventory.
-           /<command> hot - Sorts your hotbar.
+      /<command> [top] - Sorts top part of your inventory.
+      /<command> all - Sorts all of your inventory.
+      /<command> hot - Sorts your hotbar.
     permission: simplesort.inventory
 permissions:
   simplesort.*:
