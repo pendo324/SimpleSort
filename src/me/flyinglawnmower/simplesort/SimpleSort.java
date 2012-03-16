@@ -71,13 +71,13 @@ public class SimpleSort extends JavaPlugin implements Listener {
 					}
 					if (item2.getTypeId() == item1.getTypeId() && item1.getDurability() == item2.getDurability() && item1.getEnchantments().equals(item2.getEnchantments())) {
 						if (item2.getAmount() > needed) {
-							item1.setAmount(64);
+							item1.setAmount(item1.getMaxStackSize());
 							item2.setAmount(item2.getAmount() - needed);
 							break;
 						} else {
 							items[j] = null;
 							item1.setAmount(item1.getAmount() + item2.getAmount());
-							needed = 64 - item1.getAmount();
+							needed = item1.getMaxStackSize() - item1.getAmount();
 						}
 					}
 				}
