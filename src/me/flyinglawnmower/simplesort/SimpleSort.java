@@ -8,7 +8,6 @@ package me.flyinglawnmower.simplesort;
  */
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -24,36 +23,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-
-class ItemComparator implements Comparator<ItemStack> {
-	public int compare(ItemStack item1, ItemStack item2) {
-		if (item1 == null && item2 != null) {
-			return 1;
-		} else if (item1 != null && item2 == null) {
-			return -1;
-		} else if (item1 == null && item2 == null) {
-			return 0;
-		} else if (item1.getTypeId() > item2.getTypeId()) {
-			return 1;
-		} else if (item1.getTypeId() < item2.getTypeId()) {
-			return -1;
-		} else if (item1.getTypeId() == item2.getTypeId()) {
-			if (item1.getDurability() > item2.getDurability()) {
-				return 1;
-			} else if (item1.getDurability() < item2.getDurability()) {
-				return -1;
-			} else if (item1.getDurability() == item2.getDurability()) {
-				return 0;
-			}
-			if (item1.getAmount() > item2.getAmount()) {
-				return 1;
-			} else if (item1.getAmount() < item2.getAmount()) {
-				return -1;
-			}
-		}
-		return 0;
-	}
-}
 
 public class SimpleSort extends JavaPlugin implements Listener {
 	private ItemStack[] stackItems(ItemStack[] items, int first, int last) {
@@ -86,7 +55,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		return items;
 	}
 	
-	private ItemStack[] sortItems(ItemStack[] items, int first, int last) {
+	public ItemStack[] sortItems(ItemStack[] items, int first, int last) {
 		items = stackItems(items, first, last);
 		Arrays.sort(items, first, last, new ItemComparator());
 		return items;
@@ -96,6 +65,9 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		this.getConfig().options().header("The item ID of the chest-sorting wand.");
 		this.getConfig().options().copyDefaults(true);
 		saveConfig();
+		if (getServer().getPluginManager().getPlugin("Spout") != null) {
+			SpoutStuff.registerKeys(this);
+        }
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	
@@ -103,7 +75,6 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		if (sender instanceof Player) {
 			Player player = (Player)sender;
 			ItemStack[] items = player.getInventory().getContents();
-			
 			if (cmd.getName().equalsIgnoreCase("sort")) {
 				if (args.length == 0 || args[0].equalsIgnoreCase("top")) {
 					items = sortItems(items, 9, 36);
@@ -131,12 +102,10 @@ public class SimpleSort extends JavaPlugin implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getPlayer().hasPermission("simplesort.chest")) {
 			Block block = event.getClickedBlock();
-			
 			if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getMaterial().getId() == getConfig().getInt("wand") && block.getType() == Material.CHEST) {
-				Chest chest = (Chest)block.getState();
-				ItemStack[] chestItems = chest.getInventory().getContents();
+				ItemStack[] chestItems = ((Chest)block.getState()).getInventory().getContents();
 				chestItems = sortItems(chestItems, 0, chestItems.length);
-				chest.getInventory().setContents(chestItems);
+				((Chest)block.getState()).getInventory().setContents(chestItems);
 				event.getPlayer().sendMessage(ChatColor.DARK_GREEN + "Chest sorted!");
 			}
 		}
