@@ -1,35 +1,31 @@
 package me.flyinglawnmower.simplesort;
 
-import java.util.Comparator;
-
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
+import org.getspout.spoutapi.event.input.KeyBindingEvent;
+import org.getspout.spoutapi.keyboard.BindingExecutionDelegate;
 
-public class ItemComparator implements Comparator<ItemStack> {
-	public int compare(ItemStack item1, ItemStack item2) {
-		if (item1 == null && item2 != null) {
-			return 1;
-		} else if (item1 != null && item2 == null) {
-			return -1;
-		} else if (item1 == null && item2 == null) {
-			return 0;
-		} else if (item1.getTypeId() > item2.getTypeId()) {
-			return 1;
-		} else if (item1.getTypeId() < item2.getTypeId()) {
-			return -1;
-		} else if (item1.getTypeId() == item2.getTypeId()) {
-			if (item1.getDurability() > item2.getDurability()) {
-				return 1;
-			} else if (item1.getDurability() < item2.getDurability()) {
-				return -1;
-			} else if (item1.getDurability() == item2.getDurability()) {
-				return 0;
-			}
-			if (item1.getAmount() > item2.getAmount()) {
-				return 1;
-			} else if (item1.getAmount() < item2.getAmount()) {
-				return -1;
-			}
+public class KeyListener implements BindingExecutionDelegate {
+	SimpleSort plugin;
+	
+	public KeyListener (SimpleSort plugin) {
+		this.plugin = plugin;
+	}
+	
+	public void keyPressed(KeyBindingEvent event) {
+		Player player = event.getPlayer();
+		if (player.getOpenInventory().getTopInventory().getType() == InventoryType.CHEST) {
+			ItemStack[] chestItems = player.getOpenInventory().getTopInventory().getContents();
+			chestItems = plugin.sortItems(chestItems, 0, chestItems.length);
+			player.getOpenInventory().getTopInventory().setContents(chestItems);
+			event.getPlayer().sendMessage(ChatColor.DARK_GREEN + "Chest sorted!");
+		} else {
+			plugin.getServer().dispatchCommand(player, "sort");
 		}
-		return 0;
+	}
+	
+	public void keyReleased(KeyBindingEvent event) {
 	}
 }
