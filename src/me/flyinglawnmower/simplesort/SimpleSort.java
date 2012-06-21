@@ -65,9 +65,6 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		this.getConfig().options().header("The item ID of the chest-sorting wand.");
 		this.getConfig().options().copyDefaults(true);
 		saveConfig();
-		if (getServer().getPluginManager().getPlugin("Spout") != null) {
-			SpoutStuff.registerKeys(this);
-        }
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	
