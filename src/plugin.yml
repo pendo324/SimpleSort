@@ -1,10 +1,9 @@
 name: SimpleSort
-version: 1.4
+version: 1.3
 description: A simple inventory/chest sorting plugin.
 author: FlyingLawnmowerDev
 authors: [Shadow1013GL, Pyr0Byt3, pendo324]
 main: me.flyinglawnmower.simplesort.SimpleSort
-softdepend: [Spout]
 commands:
   sort:
     aliases: [simplesort, ss]
