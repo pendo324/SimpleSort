@@ -2,7 +2,8 @@ SimpleSort
 	SimpleSort is a simple plugin which allows players to sort the items in their inventories and chests by the item IDs. It was created as a continuation of VeraLapsa's Inventory Sort plugin, and it's the first plugin made by the Flying Lawnmower Development Team (Shadow1013GL, Pyr0Byt3, and pendo324), so let us know if you find any bugs xD
 
 Commands
-	/sort [top] - Sorts top part of the player's inventory.
+	/sort - Sorts currently targeted chest, or top part of inventory if no chest is targeted.
+	/sort top - Sorts top part of the player's inventory.
 	/sort all - Sorts all of the player's inventory.
 	/sort hot - Sorts the player's hotbar.
 
@@ -10,5 +11,9 @@ Permissions
 	simplesort.* - Allows the player to sort both chests and their own inventory.
 		simplesort.chest - Allows the player to sort chests by hitting them the wand (Stick by default, but it can be changed in the config file).
 		simplesort.inventory - Allows the player to sort their own inventory.
+
+Configuration
+	wand - The item-id of the chest-sorting wand (Stick by default; to sort using an empty hand, change it to 0).
+	stack-all - Allows stacking of all items up to 64 when sorting.
 
 Feel free to fork this and make whatever changes you want :D
