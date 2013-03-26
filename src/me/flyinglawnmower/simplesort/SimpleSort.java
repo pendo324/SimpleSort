@@ -11,22 +11,29 @@ import java.util.Arrays;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Chest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfigurationOptions;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SimpleSort extends JavaPlugin implements Listener {
-	private ItemStack[] stackItems(ItemStack[] items, int first, int last) {
-		for (int i = first; i < last; i++) {
+	private void sortInventory(Inventory inventory, int startIndex, int endIndex) {
+		ItemStack[] items = inventory.getContents();
+		
+		for (int i = startIndex; i < endIndex; i++) {
 			ItemStack item1 = items[i];
 			if (item1 == null) {
 				continue;
@@ -37,7 +44,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 			}
 			if (item1.getAmount() < maxStackSize) {
 				int needed = maxStackSize - item1.getAmount();
-				for (int j = i + 1; j < last; j++) {
+				for (int j = i + 1; j < endIndex; j++) {
 					ItemStack item2 = items[j];
 					if (item2 == null || item2.getAmount() <= 0 || maxStackSize == 1) {
 						continue;
@@ -56,45 +63,85 @@ public class SimpleSort extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		return items;
-	}
-
-	private ItemStack[] sortItems(ItemStack[] items, int first, int last) {
-		items = stackItems(items, first, last);
-		Arrays.sort(items, first, last, new ItemComparator());
-		return items;
+		Arrays.sort(items, startIndex, endIndex, new ItemComparator());
+		inventory.setContents(items);
 	}
 
 	public void onEnable() {
-		this.getConfig().options().header("The item ID of the chest-sorting wand (0 for hand), and whether or not to stack all item types to 64.");
-		this.getConfig().options().copyDefaults(true);
+		FileConfigurationOptions options = this.getConfig().options();
+		
+		options.header("enable-wand: Whether or not to allow sorting with the wand.\nwand: The item ID of the chest-sorting wand (0 for hand).\nstack-all: Whether or not to stack all item types to 64.");
+		options.copyDefaults(true);
 		saveConfig();
 		getServer().getPluginManager().registerEvents(this, this);
 	}
+	
+	@EventHandler
+	public void onPlayerLogin(PlayerLoginEvent event) {
+		event.getPlayer().setMetadata("CommandSorting", new FixedMetadataValue(this, false));
+	}
 
-	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
 		if (sender instanceof Player) {
-			Player player = (Player)sender;
-			ItemStack[] items = player.getInventory().getContents();
-			if (cmd.getName().equalsIgnoreCase("sort")) {
-				if (args.length == 0 && player.getTargetBlock(null, 4).getType() == Material.CHEST) {
-					this.getServer().getPluginManager().callEvent(new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, new ItemStack(getConfig().getInt("wand")), player.getTargetBlock(null, 4), BlockFace.SELF));
+			if (command.getName().equalsIgnoreCase("sort")) {
+				Player player = (Player)sender;
+				Block block = player.getTargetBlock(null, 4);
+				String inventorySortPerm = "simplesort.inventory";
+				
+				if (args.length == 0) {
+					if (block.getType() == Material.CHEST
+							|| block.getType() == Material.TRAPPED_CHEST
+							|| block.getType() == Material.ENDER_CHEST) {
+						player.performCommand("sort chest");
+					} else {
+						player.performCommand("sort top");
+					}
 					return true;
 				}
-				if (args.length == 0 || args[0].equalsIgnoreCase("top")) {
-					items = sortItems(items, 9, 36);
-					player.sendMessage(ChatColor.DARK_GREEN + "Inventory top sorted!");
-				} else if (args[0].equalsIgnoreCase("all")) {
-					items = sortItems(items, 0, 36);
-					player.sendMessage(ChatColor.DARK_GREEN + "Entire inventory sorted!");
-				} else if (args[0].equalsIgnoreCase("hot")) {
-					items = sortItems(items, 0, 9);
-					player.sendMessage(ChatColor.DARK_GREEN + "Hotbar sorted!");
-				} else {
-					return false;
+				switch (args[0].toLowerCase()) {
+					case "chest":
+						if (player.hasPermission("simplesort.chest")) {
+							if (block.getType() == Material.CHEST
+									|| block.getType() == Material.TRAPPED_CHEST
+									|| block.getType() == Material.ENDER_CHEST) {
+								player.setMetadata("CommandSorting", new FixedMetadataValue(this, true));
+								this.getServer().getPluginManager().callEvent(new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, new ItemStack(getConfig().getInt("wand")), block, BlockFace.SELF));
+								return true;
+							} else {
+								player.sendMessage(ChatColor.DARK_RED + "Not currently targeting a chest!");
+								return true;
+							}
+						} else {
+							player.sendMessage(ChatColor.DARK_RED + "You don't have permission to sort chests!");
+						}
+						break;
+					case "top":
+						if (player.hasPermission(inventorySortPerm)) {
+							sortInventory(player.getInventory(), 9, 36);
+							player.sendMessage(ChatColor.DARK_GREEN + "Inventory top sorted!");
+						} else {
+							player.sendMessage(ChatColor.DARK_RED + "You don't have permission to sort your inventory!");
+						}
+						return true;
+					case "all":
+						if (player.hasPermission(inventorySortPerm)) {
+							sortInventory(player.getInventory(), 0, 36);
+							player.sendMessage(ChatColor.DARK_GREEN + "Entire inventory sorted!");
+						} else {
+							player.sendMessage(ChatColor.DARK_RED + "You don't have permission to sort your inventory!");
+						}
+						return true;
+					case "hot":
+						if (player.hasPermission(inventorySortPerm)) {
+								sortInventory(player.getInventory(), 0, 9);
+								player.sendMessage(ChatColor.DARK_GREEN + "Hotbar sorted!");
+						} else {
+							player.sendMessage(ChatColor.DARK_RED + "You don't have permission to sort your inventory!");
+						}
+						return true;
+					default:
+						return false;
 				}
-				player.getInventory().setContents(items);
-				return true;
 			}
 		} else {
 			sender.sendMessage("You need to be a player to sort your inventory!");
@@ -102,16 +149,27 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		}
 		return false;
 	}
-
+	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.getPlayer().hasPermission("simplesort.chest")) {
-			if (event.getAction() == Action.LEFT_CLICK_BLOCK && event.getMaterial().getId() == getConfig().getInt("wand") && event.getClickedBlock().getType() == Material.CHEST) {
-				ItemStack[] chestItems = ((Chest)event.getClickedBlock().getState()).getInventory().getContents();
-				chestItems = sortItems(chestItems, 0, chestItems.length);
-				((Chest)event.getClickedBlock().getState()).getInventory().setContents(chestItems);
-				event.getPlayer().sendMessage(ChatColor.DARK_GREEN + "Chest sorted!");
+		Player player = event.getPlayer();
+		
+		if (event.getAction() == Action.LEFT_CLICK_BLOCK
+				&& event.getMaterial().getId() == getConfig().getInt("wand")
+				&& (player.hasPermission("simplesort.chest.wand") || player.getMetadata("CommandSorting").get(0).asBoolean())) {
+			Block block = event.getClickedBlock();
+			Inventory inventory;
+			
+			if (block.getType() == Material.CHEST || block.getType() == Material.TRAPPED_CHEST) {
+				inventory = ((InventoryHolder)block.getState()).getInventory();
+			} else if (block.getType() == Material.ENDER_CHEST) {
+				inventory = player.getEnderChest();
+			} else {
+				return;
 			}
+			player.setMetadata("CommandSorting", new FixedMetadataValue(this, false));
+			sortInventory(inventory, 0, inventory.getSize());
+			player.sendMessage(ChatColor.DARK_GREEN + "Chest sorted!");
 		}
 	}
 }
