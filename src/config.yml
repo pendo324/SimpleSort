@@ -1,2 +1,3 @@
+enable-wand: true
 wand: 280
 stack-all: false
