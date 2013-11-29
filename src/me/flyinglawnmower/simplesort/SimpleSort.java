@@ -7,14 +7,9 @@ package me.flyinglawnmower.simplesort;
  * - pendo324
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -34,16 +29,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SimpleSort extends JavaPlugin implements Listener {
-	private String inventorySortPerm = "simplesort.inventory";
-	private String chestSortPerm = "simplesort.chest";
-	private String wandSortPerm = "simplesort.chest.wand";
-	private String autoSortPerm = "simplesort.chest.auto";
-	File autoSortFile;
+	private Permission inventorySortPerm = new Permission("simplesort.inventory");
+	private Permission chestSortPerm = new Permission("simplesort.chest");
+	private Permission wandSortPerm = new Permission("simplesort.chest.wand");
+	private Permission autoSortPerm = new Permission("simplesort.chest.auto");
 	
-	private Map<String, Boolean> autoSort;
+	private String autoSortConfigPath = "auto-sorting";
+	private HashMap<String, Boolean> autoSortList = new HashMap<String, Boolean>();
 	private Material wand;
 	
 	private void sortInventory(Inventory inventory, int startIndex, int endIndex) {
@@ -95,9 +91,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		inventory.setContents(items);
 	}
 
-	@SuppressWarnings("unchecked")
 	public void onEnable() {
-		autoSortFile = new File(getDataFolder() + File.separator + "autosort");
 		FileConfigurationOptions options = getConfig().options();
 		
 		options.header("enable-wand: Whether or not to allow sorting with the wand.\n"
@@ -107,28 +101,21 @@ public class SimpleSort extends JavaPlugin implements Listener {
 		saveConfig();
 		wand = Material.matchMaterial(getConfig().getString("wand", "STICK"));
 		
-		if (autoSortFile.exists()) {
-			try {
-				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(autoSortFile));
-				autoSort = (HashMap<String, Boolean>)ois.readObject();
-				ois.close();
-			} catch (Exception e) {
-				e.printStackTrace();
+		if (getConfig().isSet(autoSortConfigPath)) {
+			for (String key : getConfig().getConfigurationSection(autoSortConfigPath).getKeys(false)) {
+				autoSortList.put(key, getConfig().getBoolean(autoSortConfigPath + "." + key));
 			}
-		} else {
-			autoSort = new HashMap<String, Boolean>();
 		}
 		
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	
 	public void onDisable() {
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(autoSortFile));
-			oos.writeObject(autoSort);
-			oos.close();
-		} catch(Exception e) {
-			e.printStackTrace();
+		if (!autoSortList.isEmpty()) {
+			for (Entry<String, Boolean> entry : autoSortList.entrySet()) {
+				getConfig().set(autoSortConfigPath + "." + entry.getKey(), entry.getValue());
+			}
+			saveConfig();
 		}
 	}
 	
@@ -136,8 +123,8 @@ public class SimpleSort extends JavaPlugin implements Listener {
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		Player player = event.getPlayer();
 		
-		if (!autoSort.containsKey(player.getName())) {
-			autoSort.put(player.getName(), false);
+		if (player.hasPermission(autoSortPerm) && !autoSortList.containsKey(player.getName())) {
+			autoSortList.put(player.getName(), false);
 		}
 		event.getPlayer().setMetadata("commandSorting", new FixedMetadataValue(this, false));
 	}
@@ -202,9 +189,19 @@ public class SimpleSort extends JavaPlugin implements Listener {
 						return true;
 					case "auto":
 						if (player.hasPermission(autoSortPerm)) {
-							autoSort.put(player.getName(), !autoSort.get(player.getName()));
+							if (args.length == 1) {
+								autoSortList.put(player.getName(), !autoSortList.get(player.getName()));
+							} else if (args.length > 1) {
+								if (args[1].equalsIgnoreCase("on")) {
+									autoSortList.put(player.getName(), true);
+								} else if (args[1].equalsIgnoreCase("off")) {
+									autoSortList.put(player.getName(), false);
+								} else {
+									return false;
+								}
+							}
 							
-							if (autoSort.get(player.getName())) {
+							if (autoSortList.get(player.getName())) {
 								player.sendMessage(ChatColor.DARK_GREEN + "Auto-sorting enabled!");
 							} else {
 								player.sendMessage(ChatColor.DARK_RED + "Auto-sorting disabled!");
@@ -233,7 +230,7 @@ public class SimpleSort extends JavaPlugin implements Listener {
 				&& event.getMaterial() == wand
 				&& (player.hasPermission(wandSortPerm) || commandSorting)
 				|| event.getAction() == Action.RIGHT_CLICK_BLOCK
-				&& autoSort.get(player.getName())) {
+				&& player.hasPermission(autoSortPerm) && autoSortList.get(player.getName())) {
 			Block block = event.getClickedBlock();
 			Inventory inventory;
 			

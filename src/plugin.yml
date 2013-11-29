@@ -1,5 +1,5 @@
 name: SimpleSort
-version: 1.7
+version: 2.0
 description: A simple inventory/chest sorting plugin.
 author: FlyingLawnmowerDev
 authors: [Shadow1013GL, Pyr0Byt3, pendo324]
@@ -14,7 +14,7 @@ commands:
       /<command> all - Sorts all of your inventory.
       /<command> hot - Sorts your hotbar.
       /<command> chest - Sorts currently targeted chest.
-      /<command> auto - Toggles auto-sorting opened chests.
+      /<command> auto [on|off] - Toggles auto-sorting opened chests.
 permissions:
   simplesort.chest:
     description: Allows the player to sort chests.
