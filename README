@@ -7,16 +7,17 @@ Commands
 	/sort all - Sorts all of the player's inventory.
 	/sort hot - Sorts the player's hotbar.
 	/sort chest - Sorts the currently targeted chest.
+	/sort auto [on|off] - Toggles auto-sorting of opened chests.
 
 Permissions
 	simplesort.* - Allows the player to sort both chests and their own inventory.
 		simplesort.chest - Allows the player to sort chests by hitting them the wand (Stick by default, but it can be changed in the config file).
 		simplesort.inventory - Allows the player to sort their own inventory.
 
-Note: To disable wand-sorting for specific players, remove the wand permission, like so: - -simplesort.chest.wand.
+Note: To disable wand-sorting for specific players, remove the wand permission, like so: - -simplesort.chest.wand. Same goes for diabling auto-sorting: - -simplesort.chest.auto.
 
 Configuration
-	wand - The item-id of the chest-sorting wand (Stick by default; to sort using an empty hand, change it to 0).
+	wand - The name of the chest-sorting wand (STICK by default; to sort using an empty hand, change it to AIR).
 	stack-all - Allows stacking of all items up to 64 when sorting.
 	enable-wand - Whether or not to allow sorting chests with the wand.
 
